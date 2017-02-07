@@ -13,19 +13,19 @@
 // =========================== INTERFACE FUNCTIONS ============================
 // ============================================================================
 
-double Evens_Up::success_probability(int num_dice, int target_successes)
+double Evens_Up::success_probability(int cliche_level, int target_number)
 {
     double failure_prob = 0;
 
-    possible_rolls(num_dice, target_successes, failure_prob);
+    possible_rolls(cliche_level, target_number, failure_prob);
 
     return 1 - failure_prob;
 }
 
-void Evens_Up::print_failure_combinations(int num_dice, int target_successes, 
+void Evens_Up::print_failure_combinations(int cliche_level, int target_number, 
     std::ostream& os, int precision)
 {
-    possible_rolls(num_dice, target_successes, os, precision);
+    possible_rolls(cliche_level, target_number, os, precision);
 }
 
 // ============================================================================
@@ -52,7 +52,7 @@ double Evens_Up::roll_probability(const std::list<short>& container)
 }
 
 void Evens_Up::rec_possible_rolls(Node* root, std::list<short>& path, 
-    const int num_dice, const int target_success, 
+    const int cliche_level, const int target_number, 
     std::function<void(const std::list<short>&)> callback_fn, bool is_root)
 {
     typedef std::vector<Node*>::const_iterator child_cit;
@@ -64,13 +64,13 @@ void Evens_Up::rec_possible_rolls(Node* root, std::list<short>& path,
         path.push_back(root->value);
 
     // If enough successes, stop recursion
-    if ( count_successes(path) < target_success )
+    if ( count_successes(path) < target_number )
     {
         // If no more dice (and not enough successes), add path to rolls
-        if (num_dice == 0)
+        if (cliche_level == 0)
             callback_fn(path);
 
-        if (num_dice > 0)
+        if (cliche_level > 0)
         {
             // Create children if needed
             if (root->children.empty())
@@ -79,8 +79,8 @@ void Evens_Up::rec_possible_rolls(Node* root, std::list<short>& path,
             // Continue recursion. If 1-5, decrease the number of dice
             for (child_cit it = root->children.begin(); it != root->children.end(); ++it)
             {
-                int new_num_dice = num_dice - ((*it)->value != 6);
-                rec_possible_rolls(*it, path, new_num_dice, target_success, callback_fn);
+                int new_cliche_level = cliche_level - ((*it)->value != 6);
+                rec_possible_rolls(*it, path, new_cliche_level, target_number, callback_fn);
             }
         }
     }
@@ -99,7 +99,7 @@ void Evens_Up::rec_possible_rolls(Node* root, std::list<short>& path,
     // ==============================
 }
 
-void Evens_Up::possible_rolls(int num_dice, int target_success, double& failure_prob)
+void Evens_Up::possible_rolls(int cliche_level, int target_number, double& failure_prob)
 {
     failure_prob = 0;
 
@@ -111,13 +111,13 @@ void Evens_Up::possible_rolls(int num_dice, int target_success, double& failure_
         failure_prob += roll_probability(path);
     };
 
-    rec_possible_rolls(root, path, num_dice, target_success,
+    rec_possible_rolls(root, path, cliche_level, target_number,
         increase_lambda_fn, true);
 
     delete root;
 }
 
-void Evens_Up::possible_rolls(int num_dice, int target_success, std::ostream& os,
+void Evens_Up::possible_rolls(int cliche_level, int target_number, std::ostream& os,
     int precision)
 {
     Node* root = new Node(0);
@@ -128,7 +128,7 @@ void Evens_Up::possible_rolls(int num_dice, int target_success, std::ostream& os
     os << std::setprecision(precision) << std::fixed;
     
     // Find longest roll sequence
-    const int longest_roll_sz = 2 * target_success - 1;
+    const int longest_roll_sz = 2 * target_number - 1;
     int padding_limit = longest_roll_sz + (longest_roll_sz - 1) + 5;
 
     // Compute the line length. 28 is the minimum value
@@ -177,7 +177,7 @@ void Evens_Up::possible_rolls(int num_dice, int target_success, std::ostream& os
         title_padding_fst << title << title_padding_snd << std::endl <<
         equal_sign_line << std::endl;
 
-    rec_possible_rolls(root, path, num_dice, target_success,
+    rec_possible_rolls(root, path, cliche_level, target_number,
         lambda, true);
 
     os << equal_sign_line << std::endl;
